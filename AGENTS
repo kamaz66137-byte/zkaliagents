@@ -1,0 +1,224 @@
+# AGENTS.md z-kali 插件开发指南
+ 
+
+## 插件 z-kali(Plugins)项目概述
+  - **代理 (Agents)** - 与 MCP 服务器集成的专用 GitHub Copilot 代理
+  - **指令 (Instructions)** - 应用于特定文件模式的编码标准和最佳实践
+  - **技能 (Skills)** - 包含指令和绑定资源的独立文件夹，用于执行专门任务
+  - **钩子 (Hooks)** - 在开发过程中由特定事件触发的自动化工作流
+  - **工作流 (Workflows)** - [智能体工作流 (Agentic Workflows)](https://github.github.com/gh-aw) 用于在 GitHub Actions 中实现 AI 驱动的仓库自动化
+  - **插件 Plugins.json** - 包含插件元数据的 JSON 文件
+
+## 仓库结构
+
+```text
+.github/
+├── agents/           # 自定义 GitHub Copilot 代理定义（.agent.md 文件）
+├── instructions/     # 编码标准和指南（.instructions.md 文件）
+├── skills/           # 代理技能文件夹（每个文件夹包含 SKILL.md 以及可选的绑定资源）
+├── hooks/            # 自动化工作流钩子（包含 README.md + hooks.json 的文件夹）
+├── workflows/        # 智能体工作流（用于 GitHub Actions 自动化的 .md 文件）
+├── plugins.json      # 命令下启动工具及自动化脚本等（包含 plugin.json 的文件夹）
+└── README.md         # 代理、指令、技能、钩子和工作流的自动生成文档
+
+```
+## 参考文档
+
+- 自定义指令：`https://code.visualstudio.com/docs/copilot/customization/custom-instructions`
+- 提示词文件：`https://code.visualstudio.com/docs/copilot/customization/prompt-files`
+- 自定义代理：`https://code.visualstudio.com/docs/copilot/customization/custom-agents`
+- 语言模型：`https://code.visualstudio.com/docs/copilot/customization/language-models`
+- MCP 服务器：`https://code.visualstudio.com/docs/copilot/customization/mcp-servers`
+- 钩子 (Hooks)：`https://code.visualstudio.com/docs/copilot/customization/hooks`
+- 代理插件：`https://code.visualstudio.com/docs/copilot/customization/agent-plugins`
+
+
+## 开发工作流
+
+### 使用代理、指令、技能和钩子
+
+所有代理文件 (`*.agent.md`) 和指令文件 (`*.instructions.md`) 都必须包含正确的 Markdown 前言 (front matter)。代理技能 (Agent Skills) 是包含带有前言的 `SKILL.md` 文件以及可选绑定资源的文件夹。钩子 (Hooks) 是包含带有前言的 `README.md` 文件和 `hooks.json` 配置文件的文件夹：
+
+#### 代理文件 (\*.agent.md)
+
+  - 必须包含 `description` 字段（用单引号包裹）
+  - 文件名应为小写，单词之间用连字符分隔
+  - 推荐包含 `tools` 字段
+  - 强烈推荐指定 `model` 字段
+
+#### 指令文件 (\*.instructions.md)
+
+  - 必须包含 `description` 字段（用单引号包裹，且不能为空）
+  - 必须包含 `applyTo` 字段以指定文件模式（例如：`'**.js, **.ts'`）
+  - 文件名应为小写，单词之间用连字符分隔
+
+#### 代理技能 (skills/\*/SKILL.md)
+
+  - 每个技能都是一个包含 `SKILL.md` 文件的文件夹
+  - SKILL.md 必须包含 `name` 字段（小写加连字符，与文件夹名称一致，最多 64 个字符）
+  - SKILL.md 必须包含 `description` 字段（用单引号包裹，10-1024 个字符）
+  - 文件夹名称应为小写，单词之间用连字符分隔
+  - 技能可包含绑定资源（脚本、模板、数据文件）
+  - 绑定的资源应在 SKILL.md 指令中被引用
+  - 资源文件大小应合理（每个文件不超过 5MB）
+  - 技能需遵循 [Agent Skills 规范](https://agentskills.io/specification)
+
+#### 钩子文件夹 (hooks/\*/README.md)
+
+  - 每个钩子都是一个包含 `README.md` 文件（带有前言）的文件夹
+  - README.md 必须包含 `name` 字段（人类可读名称）
+  - README.md 必须包含 `description` 字段（用单引号包裹，且不能为空）
+  - 必须包含一个 `hooks.json` 文件用于配置钩子（从此文件提取钩子事件）
+  - 文件夹名称应为小写，单词之间用连字符分隔
+  - 可包含绑定资源（脚本、实用工具、配置文件）
+  - 绑定的脚本应在 README.md 和 hooks.json 中被引用
+  - 遵循 [GitHub Copilot hooks 规范](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/use-hooks)
+  - 可选包含 `tags` 字段用于分类
+
+#### 工作流文件 (workflows/\*.md)
+
+  - 每个工作流都是 `workflows/` 目录下的一个独立 `.md` 文件
+  - 必须包含 `name` 字段（人类可读名称）
+  - 必须包含 `description` 字段（用单引号包裹，且不能为空）
+  - 包含智能体工作流前言（`on`、`permissions`、`safe-outputs`）以及自然语言指令
+  - 文件名应为小写，单词之间用连字符分隔
+  - 仅接受 `.md` 文件 —— CI 会阻止 `.yml`、`.yaml` 和 `.lock.yml` 文件
+  - 遵循 [GitHub Agentic Workflows 规范](https://github.github.com/gh-aw/reference/workflow-structure/)
+
+#### plugin.json
+
+  - plugin.json 必须包含 `name` 字段（需与文件夹名称一致）
+  - plugin.json 必须包含 `description` 字段（描述插件用途）
+  - plugin.json 必须包含 `version` 字段（语义化版本，例如 "1.0.0"）
+  - 插件内容在 plugin.json 中使用 Claude Code 规范字段（`agents`、`commands`、`skills`）声明性定义。源文件位于顶级目录中，并由 CI 具体化为插件。
+  - 在构建期间，会从所有插件自动生成 `marketplace.json` 文件
+  - 插件可通过 GitHub Copilot CLI 发现和安装
+
+### 添加新资源
+
+在添加新代理、指令、技能、钩子、工作流或插件时：
+
+**对于代理和指令：**
+
+1.  使用正确的前言创建文件
+2.  将文件添加到相应目录
+4.  验证资源是否出现在生成的 README.md 中 
+
+**对于钩子：**
+
+1.  在 `hooks/` 中创建一个带有描述性名称的新文件夹
+2.  创建具有正确前言（name, description, hooks, tags）的 `README.md`
+3.  遵循 GitHub Copilot hooks 规范创建带有钩子配置的 `hooks.json`
+4.  将任何绑定的脚本或资源添加到文件夹中
+5.  使脚本可执行：`chmod +x script.sh`
+6.  通过运行 `npm run build` 更新 README.md
+7.  验证钩子是否出现在生成的 README 中
+
+**对于工作流：**
+
+1.  在 `workflows/` 中创建一个具有描述性名称的新 `.md` 文件（例如 `daily-issues-report.md`）
+2.  包含带有 `name` 和 `description` 的前言，以及智能体工作流字段（`on`、`permissions`、`safe-outputs`）
+3.  使用 `gh aw compile --validate` 进行编译以验证其有效性
+4.  通过运行 `npm run build` 更新 README.md
+5.  验证工作流是否出现在生成的 README 中
+
+**对于技能：**
+
+1.  使用你的指令编辑生成的 SKILL.md 文件
+2.  将任何绑定资源（脚本、模板、数据）添加到技能文件夹中
+3.  验证技能是否出现在生成的 README 中
+
+**对于外部插件：**
+
+1.  编辑 `plugins/external.json` 并添加包含 `name`、`source`、`description` 和 `version` 的条目
+2.  `source` 字段应为一个对象，指定 GitHub 仓库、git URL、npm 包或 pip 包（请参阅 [CONTRIBUTING.md](https://www.google.com/search?q=CONTRIBUTING.md%23adding-external-plugins)）
+3.  运行 `npm run build` 以重新生成 marketplace.json
+4.  验证外部插件是否出现在 `.github/plugin/marketplace.json` 中
+
+
+## 代码风格指南
+
+### Markdown 文件
+
+  - 使用包含必填字段的正确前言
+  - 保持描述简明扼要且提供有效信息
+  - 使用单引号包裹描述字段的值
+  - 使用小写文件名并以连字符作为分隔符
+
+
+## Pull Request 指南
+
+在创建 Pull Request 时：
+
+> **重要提示：** 所有 Pull Request 应该以 **`staged`** 分支为目标，而不是 `main` 分支。
+
+1.  **README 更新**：新文件应自动添加到 README 中
+2.  **前言验证**：确保所有 Markdown 文件具有必需的前言字段
+3.  **文件命名**：验证所有新文件遵循连字符分隔的小写命名约定
+4.  **换行符**：**务必运行 `bash scripts/fix-line-endings.sh`** 以将换行符标准化为 LF（Unix 风格）
+5.  **描述**：明确描述你的代理/指令的作用
+
+
+### 代码审查检查清单
+
+对于指令文件 (\*.instructions.md)：
+
+  - [ ] 具有 Markdown 前言
+  - [ ] 包含被单引号包裹且非空的 `description` 字段
+  - [ ] 包含带有文件模式的 `applyTo` 字段
+  - [ ] 文件名为连字符分隔的小写形式
+
+对于代理文件 (\*.agent.md)：
+
+  - [ ] 具有 Markdown 前言
+  - [ ] 包含被单引号包裹且非空的 `description` 字段
+  - [ ] 包含带有可读名称的 `name` 字段（例如使用 "Address Comments" 而非 "address-comments"）
+  - [ ] 文件名为连字符分隔的小写形式
+  - [ ] 包含 `model` 字段（强烈推荐）
+  - [ ] 考虑使用 `tools` 字段
+
+对于技能 (skills/\*/)：
+
+  - [ ] 文件夹包含一个 SKILL.md 文件
+  - [ ] SKILL.md 具有 Markdown 前言
+  - [ ] 包含与文件夹名称匹配的 `name` 字段（连字符小写，最大 64 个字符）
+  - [ ] 包含被单引号包裹且非空的 `description` 字段（10-1024 个字符）
+  - [ ] 文件夹名称为连字符分隔的小写形式
+  - [ ] 任何绑定资源均在 SKILL.md 中被引用
+  - [ ] 绑定资源每个文件大小均小于 5MB
+
+对于钩子文件夹 (hooks/\*/)：
+
+  - [ ] 文件夹包含一个具有 Markdown 前言的 README.md 文件
+  - [ ] 包含带有人类可读名称的 `name` 字段
+  - [ ] 包含被单引号包裹且非空的 `description` 字段
+  - [ ] 包含具有有效钩子配置的 `hooks.json` 文件（从此文件提取钩子事件）
+  - [ ] 文件夹名称为连字符分隔的小写形式
+  - [ ] 任何绑定脚本均可执行并在 README.md 中被引用
+  - [ ] 遵循 [GitHub Copilot hooks 规范](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/use-hooks)
+  - [ ] 可选包含 `tags` 数组字段用于分类
+
+对于工作流文件 (workflows/\*.md)：
+
+  - [ ] 文件具有 Markdown 前言
+  - [ ] 包含带有人类可读名称的 `name` 字段
+  - [ ] 包含被单引号包裹且非空的 `description` 字段
+  - [ ] 文件名为连字符分隔的小写形式
+  - [ ] 前言中包含 `on` 和 `permissions`
+  - [ ] 工作流使用最小特权权限和安全输出 (safe outputs)
+  - [ ] 未包含 `.yml`、`.yaml` 或 `.lock.yml` 文件
+  - [ ] 遵循 [GitHub Agentic Workflows 规范](https://github.github.com/gh-aw/reference/workflow-structure/)
+
+对于插件 根目录
+  - [ ] 目录包含 `plugin.json` 文件
+  - [ ] 目录包含 `README.md` 文件
+  - [ ] `plugin.json` 具有与目录名称匹配的 `name` 字段（连字符分隔的小写形式）
+  - [ ] `plugin.json` 具有非空的 `description` 字段
+  - [ ] `plugin.json` 具有 `version` 字段（语义化版本，例如 "1.0.0"）
+  - [ ] 目录名称为连字符分隔的小写形式
+  - [ ] 如果存在 `keywords`，则它应是连字符小写字符串的数组
+  - [ ] 如果存在 `agents`、`commands` 或 `skills` 数组，则每个条目必须是有效的相对路径
+  - [ ] 插件不引用不存在的文件
+
+---
+
