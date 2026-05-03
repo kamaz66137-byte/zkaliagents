@@ -1,0 +1,12 @@
+{
+  "name": "z-kali-plugins",
+  "description": "Registry of z-kali plugins available for GitHub Copilot. Each entry references a plugin folder at the repository root.",
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "name": "z-kali-plugin",
+      "path": "./z-kali-plugin",
+      "description": "Core z-kali plugin providing agents, skills, and commands for plugin development workflows."
+    }
+  ]
+}

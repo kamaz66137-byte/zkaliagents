@@ -1,0 +1,16 @@
+{
+  "name": "zkaliagents",
+  "version": "1.0.0",
+  "description": "Z-Kali agents, instructions, skills, hooks, workflows, and plugins for GitHub Copilot.",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-readme.js && node scripts/build-marketplace.js",
+    "build:readme": "node scripts/build-readme.js",
+    "build:marketplace": "node scripts/build-marketplace.js",
+    "validate": "bash .github/skills/z-kali-analyzer/validate.sh",
+    "fix-line-endings": "bash scripts/fix-line-endings.sh"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

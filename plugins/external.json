@@ -1,0 +1,12 @@
+[
+  {
+    "name": "example-external-plugin",
+    "description": "An example entry showing how to register an external plugin from another GitHub repository.",
+    "version": "1.0.0",
+    "source": {
+      "type": "github",
+      "repo": "example-org/example-plugin-repo",
+      "ref": "main"
+    }
+  }
+]

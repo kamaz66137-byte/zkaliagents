@@ -1,0 +1,18 @@
+{
+  "name": "z-kali-plugin",
+  "description": "Core z-kali plugin providing a Copilot agent, coding-standards instructions, and an analyzer skill for z-kali plugin development workflows.",
+  "version": "1.0.0",
+  "keywords": [
+    "z-kali",
+    "copilot",
+    "plugin-development",
+    "agents",
+    "skills"
+  ],
+  "agents": [
+    "../.github/agents/z-kali.agent.md"
+  ],
+  "skills": [
+    "../.github/skills/z-kali-analyzer"
+  ]
+}
