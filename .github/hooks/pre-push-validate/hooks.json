@@ -1,0 +1,9 @@
+{
+  "hooks": [
+    {
+      "event": "pre-push",
+      "run": "bash .github/hooks/pre-push-validate/pre-push.sh",
+      "description": "Validate front matter and naming conventions for all plugin files before pushing"
+    }
+  ]
+}
